@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock title %}
+{% block body %}
+<div class="container mt-1">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+        <!-- Iterate over News objects -->
+        {% for about_item in about_list %}
+        <div class="col mb-4">
+            <div class="card h-100">
+                <!-- Display the news image dynamically -->
+
+                <img src="{{ about_item.news_image.url }}" class="card-img-top" alt="{{ about_item.news_title }}">
+
+                <div class="card-body">
+                    <p class="card-text">{{ about_item.news_desc }}</p>
+                </div>
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">Like</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary">Dislike</button>
+                    </div>
+                    <small class="text-muted">{{ about_item.views }} views</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock body %}

@@ -1,0 +1,19 @@
+{% for product in products %}
+    <div class="product">
+        <h3>
+            <a href="{% url 'get_product' product.slug %}">
+                {{ product.product_name }}
+            </a>
+        </h3>
+        <!-- Display the product image or a placeholder -->
+        <img src="/media/{{ product.product_images.first.image}}" alt="{{ product.product_name }}">
+        
+        <!-- Display product name as a clickable link -->
+        
+                <!-- Display product price -->
+                <p>Price: ${{ product.base_price }}</p>
+        
+    </div>
+{% empty %}
+    <p>No products available.</p>
+{% endfor %}

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.product_name }}</title>
+</head>
+<body>
+    <h1>{{ product.product_name }}</h1>
+    <p>{{ product.product_description }}</p>
+    <h3>Base Price: ${{ product.base_price }}</h3>
+
+    <!-- Product Images -->
+    <div class="product-images">
+        <h3>Images:</h3>
+        {% for image in product.product_images.all %}
+            <img src="{{ image.image.url }}" alt="Product Image">
+        {% empty %}
+            <p>No images available for this product.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

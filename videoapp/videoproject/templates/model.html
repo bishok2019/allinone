@@ -1,0 +1,46 @@
+<div class="modal fade" id="videoModal" tabindex="-1" role="dialog" aria-labelledby="videoModalLabel"
+aria-hidden="true">
+<div class="modal-dialog" role="document">
+    <div class="modal-content">
+        <div style="height:200px" class="modal-header">
+            <h5 class="modal-title" id="videoModalLabel"></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div id="videoPlayer"></div>
+            <p id="videoDescription"></p>
+            <div>
+                <div id="chatbox"
+                    style="margin-top: -450px; height: 395px; overflow-y: scroll; float:right;width: 255px;">
+                    <h4 style="float:right;margin-right: 87px;">Live Chat</h4>
+                    <?php
+                    // Fetch and display the chat messages for the selected video
+                    // $videoId = $_POST['video_id']; // Retrieve the video ID from the AJAX request
+                    $chatQuery = "SELECT * FROM chat_messages";
+                    $chatResult = $conn->query($chatQuery);
+                    if ($chatResult && $chatResult->num_rows > 0) {
+                        while ($chatRow = $chatResult->fetch_assoc()) {
+                            $message = $chatRow['message'];
+                            $username = $chatRow['username'];
+                            $timestamp = $chatRow['timestamp'];
+                            echo "<p><strong>$username:</strong> <span class='comment-date'>($timestamp)</span><br>$message</p>";
+                        }
+                    } else {
+                        echo "<p>No messages found.</p>";
+                    }
+                    ?>
+                </div>
+                <div style="float: right; margin-right: 16px;margin-top:-25px;">
+                    <form id="chatForm" action="insert_chat.php" method="POST">
+                        <input type="hidden" id="videoId" name="videoId">
+                        <input type="text" name="message" placeholder="Type your message">
+                        <button type="submit">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
