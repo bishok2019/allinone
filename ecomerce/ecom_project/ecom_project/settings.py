@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'products',
     'accounts',
     'nested_admin',
+    'rest_framework',
+
 ]
 
 MIDDLEWARE = [

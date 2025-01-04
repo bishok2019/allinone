@@ -13,10 +13,40 @@
     <!-- Product Images -->
     <div class="product-images">
         <h3>Images:</h3>
-        {% for image in product.product_images.all %}
+        {% for image in product_sizes.product_colors.all %}
             <img src="{{ image.image.url }}" alt="Product Image">
         {% empty %}
             <p>No images available for this product.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Sizes -->
+    <div class="product-sizes">
+        <h3>Available Sizes:</h3>
+        {% for size in product.product_sizes.all %}
+            <p>Size: {{ size.size_name }} (Additional Price: ${{ size.additional_price }})</p>
+
+            <!-- Colors for Size -->
+            <div class="product-colors">
+                <h4>Colors:</h4>
+                {% for color in size.product_colors.all %}
+                    <p>Color: {{ color.color_name }} (Additional Price: ${{ color.additional_price }})</p>
+
+                    <!-- Images for Color -->
+                    <div class="product-color-images">
+                        <h5>Images for {{ color.color_name }}:</h5>
+                        {% for color_image in color.product_colors_images.all %}
+                            <img src="{{ color_image.product_color_image.url }}" alt="Color Image for {{ color.color_name }}">
+                        {% empty %}
+                            <p>No images available for this color.</p>
+                        {% endfor %}
+                    </div>
+                {% empty %}
+                    <p>No colors available for this size.</p>
+                {% endfor %}
+            </div>
+        {% empty %}
+            <p>No sizes available for this product.</p>
         {% endfor %}
     </div>
 </body>

@@ -1,107 +1,99 @@
-# from django.contrib import admin
-# from .models import Category, Product, ProductImage, SizeVariant, ColorVariant, ProductColorImage
-
-
-# class ProductImageInline(admin.TabularInline):
-#     model = ProductImage
-#     extra = 1
-#     fields = ['image']
-#     verbose_name = "Product Image"
-#     verbose_name_plural = "Product Images"
-
-
-# class ProductColorImageInline(admin.TabularInline):
-#     model = ProductColorImage
-#     extra = 1
-#     fields = ['product_color_image']
-#     verbose_name = "Product Color Image"
-#     verbose_name_plural = "Product Color Images"
-
-
-# class ColorVariantInline(admin.TabularInline):
-#     model = ColorVariant
-#     extra = 1
-#     fields = ['color_name', 'additional_price']
-#     verbose_name = "Color Variant"
-#     verbose_name_plural = "Color Variants"
-#     inlines = [ProductColorImageInline]
-
-
-# class SizeVariantInline(admin.TabularInline):
-#     model = SizeVariant
-#     extra = 1
-#     fields = ['size_name', 'additional_price']
-#     verbose_name = "Size Variant"
-#     verbose_name_plural = "Size Variants"
-
-
-# @admin.register(Product)
-# class ProductAdmin(admin.ModelAdmin):
-#     list_display = ['product_name', 'category', 'base_price', 'slug']
-#     search_fields = ['product_name', 'category__category_name']
-#     list_filter = ['category']
-#     prepopulated_fields = {'slug': ('product_name',)}
-
-#     # Define the inlines that are directly related to Product
-#     inlines = [
-#         ProductImageInline,
-#         SizeVariantInline,  # Only SizeVariant is directly related to Product
-#     ]
-
-
-# @admin.register(Category)
-# class CategoryAdmin(admin.ModelAdmin):
-#     list_display = ['category_name', 'slug']
-#     search_fields = ['category_name']
-#     prepopulated_fields = {'slug': ('category_name',)}
-
-
-# admin.site.register(ProductImage)
-# admin.site.register(SizeVariant)
-# admin.site.register(ColorVariant)
-# admin.site.register(ProductColorImage)
-
-
-##################################################
-##################################################
-##################################################
 from django.contrib import admin
-import nested_admin
-from .models import Category, Product, ProductImage, SizeVariant, ColorVariant, ProductColorImage
+from django.utils.translation import gettext_lazy as _
+from .models import Category, Product, SizeVariant, ColorVariant, Cart, CartItem, Order, OrderItem
+from django.utils.html import format_html
 
-class ProductColorImageInline(nested_admin.NestedTabularInline):
-    model = ProductColorImage
+
+# Inline models to display CartItem in the Cart Admin page
+class CartItemInline(admin.TabularInline):
+    model = CartItem
     extra = 1
+    readonly_fields = ('color_variant', 'quantity', 'get_item_price')
+    fields = ('color_variant', 'quantity', 'get_item_price')
+    
+    def get_item_price(self, obj):
+        return obj.get_item_price()
 
-class ColorVariantInline(nested_admin.NestedStackedInline):
-    model = ColorVariant
-    inlines = [ProductColorImageInline]
-    extra = 1
 
-class SizeVariantInline(nested_admin.NestedStackedInline):
-    model = SizeVariant
-    inlines = [ColorVariantInline]
-    extra = 1
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('category_name', 'slug', 'category_image')
+    prepopulated_fields = {'slug': ('category_name',)}
 
-class ProductImageInline(nested_admin.NestedTabularInline):
-    model = ProductImage
-    extra = 1
+    def category_image_preview(self, obj):
+        if obj.category_image:
+            return format_html('<img src="{}" style="max-width:100px;max-height:100px;"/>', obj.category_image.url)
+        return "-"
+    category_image_preview.short_description = _("Category Image Preview")
 
-class ProductAdmin(nested_admin.NestedModelAdmin):
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
     list_display = ('product_name', 'category', 'base_price', 'slug')
-    search_fields = ('product_name', 'category__category_name')
+    search_fields = ('product_name', 'category__category_name',)
     list_filter = ('category',)
     prepopulated_fields = {'slug': ('product_name',)}
-    inlines = [ProductImageInline, SizeVariantInline]
-
-admin.site.register(Category)
-admin.site.register(Product, ProductAdmin)
 
 
-####
-# admin.site.register(Category)
-# admin.site.register(Product)
-admin.site.register(ProductImage)
-admin.site.register(SizeVariant)
-admin.site.register(ColorVariant)
-admin.site.register(ProductColorImage)
+@admin.register(SizeVariant)
+class SizeVariantAdmin(admin.ModelAdmin):
+    list_display = ('size_name', 'product', 'additional_price')
+    list_filter = ('product',)
+
+
+@admin.register(ColorVariant)
+class ColorVariantAdmin(admin.ModelAdmin):
+    list_display = ('color_name', 'size', 'get_product', 'total_quantity', 'final_price')
+    list_filter = ('size', 'size__product',)
+
+    def final_price(self, obj):
+        return obj.final_price()
+    final_price.short_description = _('Final Price')
+
+    def get_product(self, obj):
+        return obj.size.product.product_name if obj.size else None
+    get_product.short_description = _('Product')
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('cart_owner', 'created_at', 'updated_at', 'is_paid', 'get_total_items', 'get_cart_total')
+    list_filter = ('is_paid',)
+    search_fields = ('cart_owner__user__username',)
+
+    def get_cart_total(self, obj):
+        return obj.get_cart_total()
+    get_cart_total.short_description = _("Total Price")
+
+    def get_total_items(self, obj):
+        return obj.get_total_items()
+    get_total_items.short_description = _("Total Items")
+
+    def save_model(self, request, obj, form, change):
+        # Automatically create order when cart is marked as paid
+        if obj.is_paid:
+            obj.place_order()
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(CartItem)
+class CartItemAdmin(admin.ModelAdmin):
+    list_display = ('cart', 'color_variant', 'quantity', 'get_item_price')
+    list_filter = ('cart', 'color_variant',)
+
+    def get_item_price(self, obj):
+        return obj.get_item_price()
+    get_item_price.short_description = _('Item Price')
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('cart', 'created_at', 'is_shipped')
+    list_filter = ('is_shipped',)
+    search_fields = ('cart__cart_owner__user__username',)
+
+
+# @admin.register(OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
+    list_display = ('order', 'color_variant', 'quantity')
+    list_filter = ('order', 'color_variant',)
+
