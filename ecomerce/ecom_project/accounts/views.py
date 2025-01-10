@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from .models import Profile
 # Create your views here.
-def login(request):
+def user_login(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
@@ -66,6 +66,6 @@ def activate_email(request, email_token):
         messages.warning(request, 'Profile Activated !')
 
         return redirect('/accounts/login')
-    except Exception as e:
+    except Exception as e:  
         return HttpResponse('Invalid token')  
     

@@ -137,8 +137,13 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-EMAIL_HOST_PASSWORD = config('EMAIL_PASS')
+MEDIA_ROOT =BASE_DIR/"media"
+EMAIL_HOST_PASSWORD=config('EMAIL_PASS')
 EMAIL_HOST_USER=config("EMAIL_USER")
 
-MEDIA_ROOT =BASE_DIR/"media"
 MEDIA_URL = '/media/'
+
+STRIPE_SECRET_KEY=config("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY=config("STRIPE_PUBLISHABLE_KEY")
+STRIPE_WEBHOOK_SECRET=config("STRIPE_WEBHOOK_SECRET")
+# stripe listen --forward-to http://127.0.0.1:8000/products/webhook/stripe

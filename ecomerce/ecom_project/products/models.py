@@ -203,8 +203,18 @@ class CartItem(BaseModel):
         """Override save to include quantity validation"""
         self.validate_quantity()
         super().save(*args, **kwargs)
-    
-    
+
+
+class Payment(BaseModel):
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('failed', 'Failed'),
+        ('succeeded', 'Succeeded'),
+    ]
+    cart = models.OneToOneField(Cart, on_delete=models.CASCADE, related_name='payment')
+    stripe_payment_intent_id = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
 
 class Order(BaseModel):
     cart = models.OneToOneField(Cart, on_delete=models.CASCADE, related_name="order")
@@ -220,3 +230,36 @@ class OrderItem(BaseModel):
 
     def __str__(self):
         return f"{self.quantity}x {self.color_variant} in Order #{self.order.id}"
+
+class Wishlist(BaseModel):
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="wishlists")
+    color_variants = models.ManyToManyField(ColorVariant, through='WishlistItem')
+
+    def __str__(self):
+        return f"Wishlist for {self.owner.user.username}"
+
+    @property
+    def total_items(self):
+        return self.wishlist_items.count()
+
+class WishlistItem(BaseModel):
+    wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE, related_name="wishlist_items")
+    color_variant = models.ForeignKey(ColorVariant, on_delete=models.CASCADE)
+    added_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('wishlist', 'color_variant')
+
+    def __str__(self):
+        return f"{self.color_variant} in {self.wishlist.owner.user.username}'s wishlist"
+
+class Feedback(BaseModel):
+    commentator =models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="commentators")
+    comment = models.TextField()
+    product = models.ForeignKey(ColorVariant, on_delete=models.CASCADE, related_name="product_feedbacks")
+    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Feedback by {self.commentator.user.username} on {self.product.color_name}"

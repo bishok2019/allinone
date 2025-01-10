@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import Category, Product, SizeVariant, ColorVariant, Cart, CartItem, Order, OrderItem
+from .models import Category, Product, SizeVariant,Feedback, ColorVariant, Cart, CartItem, Order, OrderItem, Payment, Wishlist, WishlistItem
 from django.utils.html import format_html
 
-
+admin.site.register(Payment)
+admin.site.register(WishlistItem)
+admin.site.register(Wishlist)
 # Inline models to display CartItem in the Cart Admin page
 class CartItemInline(admin.TabularInline):
     model = CartItem
@@ -97,3 +99,8 @@ class OrderItemAdmin(admin.ModelAdmin):
     list_display = ('order', 'color_variant', 'quantity')
     list_filter = ('order', 'color_variant',)
 
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+    list_display = ('commentator', 'product', 'rating', 'created_at')
+    list_filter = ('rating', 'created_at')
+    search_fields = ('user__user__username', 'product__product_name')
